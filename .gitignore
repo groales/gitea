@@ -1,0 +1,23 @@
+# Environment variables
+.env
+
+# Docker override file
+docker-compose.override.yml
+
+# Gitea data
+gitea/
+
+# PostgreSQL data
+postgres/
+
+# Backups
+*.tar.gz
+*.sql
+*.dump
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
