@@ -139,7 +139,7 @@ services:
       POSTGRES_USER: ${DB_USER:-gitea}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - gitea_db:/var/lib/postgresql/data
+      - gitea_db:/var/lib/postgresql
     networks:
       - gitea-internal
 
@@ -201,7 +201,7 @@ services:
       POSTGRES_USER: ${DB_USER:-gitea}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - gitea_db:/var/lib/postgresql/data
+      - gitea_db:/var/lib/postgresql
     networks:
       - gitea-internal
 
