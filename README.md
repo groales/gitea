@@ -21,7 +21,7 @@ Servidor Git autoalojado ligero y rápido, escrito en Go. Alternativa a GitLab y
 - **Dominio configurado**: Para acceso HTTPS
 - **DB_PASSWORD generada**: Contraseña segura para PostgreSQL
 
-⚠️ **IMPORTANTE**: Gitea requiere PostgreSQL. Este compose incluye un contenedor PostgreSQL 16 Alpine.
+⚠️ **IMPORTANTE**: Gitea requiere PostgreSQL. Este compose incluye un contenedor PostgreSQL 18 Alpine.
 
 ## Generar DB_PASSWORD
 
@@ -132,7 +132,7 @@ services:
 
   gitea-db:
     container_name: gitea-db
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-gitea}
@@ -194,7 +194,7 @@ services:
 
   gitea-db:
     container_name: gitea-db
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-gitea}
