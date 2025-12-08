@@ -233,47 +233,153 @@ DB_PASSWORD='tu_password_generado'
 5. En **Environment variables**, añade las variables correspondientes
 6. Haz clic en **Deploy the stack**
 
-## Despliegue con Docker CLI
+## Despliegue desde CLI
 
-### 1. Clonar el repositorio
+### Requisitos Previos
+
+1. **Crear red Docker para proxy**:
+   ```bash
+   docker network create proxy
+   ```
+
+2. **Generar contraseña de base de datos**:
+   ```bash
+   openssl rand -base64 32
+   ```
+   Guarda el resultado para usarlo como `DB_PASSWORD`.
+
+### Paso 1: Clonar Repositorio
 
 ```bash
+cd /opt
 git clone https://git.ictiberia.com/groales/gitea.git
 cd gitea
 ```
 
-### 2. Elegir modo de despliegue
+### Paso 2: Configurar Variables de Entorno
 
-#### Opción A: Traefik
+```bash
+cp .env.example .env
+nano .env
+```
 
+Configurar variables obligatorias:
+
+**Para Traefik**:
+```env
+# === CONFIGURACIÓN DE BASE DE DATOS (REQUERIDA) ===
+DB_PASSWORD='contraseña_generada_con_openssl'
+
+# === CONFIGURACIÓN DE DOMINIO (REQUERIDA PARA TRAEFIK) ===
+DOMAIN_HOST=gitea.example.com
+
+# === OPCIONALES (valores por defecto) ===
+DB_NAME=gitea
+DB_USER=gitea
+```
+
+**Para Nginx Proxy Manager**:
+```env
+# === CONFIGURACIÓN DE BASE DE DATOS (REQUERIDA) ===
+DB_PASSWORD='contraseña_generada_con_openssl'
+
+# === OPCIONALES (valores por defecto) ===
+DB_NAME=gitea
+DB_USER=gitea
+```
+
+### Paso 3: Configurar Override (Solo para Traefik)
+
+Si usas Traefik:
 ```bash
 cp docker-compose.override.traefik.yml.example docker-compose.override.yml
-cp .env.example .env
-# Editar .env y configurar DOMAIN_HOST y DB_PASSWORD
 ```
 
-#### Opción B: Nginx Proxy Manager
+Si usas NPM, omite este paso (usa `docker-compose.yml` base).
 
-No necesitas archivo override, usa el `docker-compose.yml` base directamente.
-
-Copiar y configurar `.env`:
-```bash
-cp .env.example .env
-# Editar .env y configurar DB_PASSWORD
-```
-
-### 3. Iniciar el servicio
+### Paso 4: Iniciar Servicios
 
 ```bash
 docker compose up -d
 ```
 
-### 4. Verificar el despliegue
+### Paso 5: Verificar Despliegue
 
 ```bash
-docker compose logs -f gitea
-docker compose logs -f gitea-db
+# Ver estado de contenedores
+docker compose ps
+
+# Ver logs de Gitea
+docker logs -f gitea
+
+# Ver logs de PostgreSQL
+docker logs -f gitea-db
+
+# Verificar que Gitea responde
+curl -I http://localhost:3000
+# Debería devolver: HTTP/1.1 200 OK
 ```
+
+### Paso 6: Configurar DNS
+
+Apunta tu dominio al servidor:
+
+```
+gitea.example.com    A    IP_DEL_SERVIDOR
+```
+
+### Paso 7: Configurar Proxy Reverso (Solo para NPM)
+
+**Para Traefik**: Ya configurado automáticamente con el override.
+
+**Para Nginx Proxy Manager**:
+1. Accede a NPM (por defecto: `http://IP_SERVIDOR:81`)
+2. **Proxy Hosts** → **Add Proxy Host**
+3. Tab **Details**:
+   ```
+   Domain Names: gitea.example.com
+   Scheme: http
+   Forward Hostname / IP: gitea
+   Forward Port: 3000
+   Cache Assets: ✓
+   Block Common Exploits: ✓
+   Websockets Support: ✓ (importante para git push/pull)
+   ```
+4. Tab **SSL**:
+   ```
+   SSL Certificate: Request a new SSL Certificate
+   Force SSL: ✓
+   HTTP/2 Support: ✓
+   HSTS Enabled: ✓
+   Email Address for Let's Encrypt: tu@email.com
+   I Agree to the Let's Encrypt Terms of Service: ✓
+   ```
+5. Click **Save**
+
+### Paso 8: Acceso Inicial y Configuración
+
+1. Accede a: `https://gitea.example.com`
+2. Completa asistente de instalación inicial:
+
+   **Configuración de Base de Datos** (pre-rellenado):
+   - Tipo: PostgreSQL
+   - Host: `gitea-db:5432`
+   - Usuario: `gitea`
+   - Contraseña: La configurada en `DB_PASSWORD`
+   - Nombre de BD: `gitea`
+
+   **Configuración General del Sitio**:
+   - Título del sitio: `Gitea: Repositorios Git`
+   - URL base de Gitea: `https://gitea.example.com/`
+   - Puerto SSH: `22` (para git clone via SSH)
+
+   **Cuenta de Administrador**:
+   - Nombre de usuario: `admin` (o el que prefieras)
+   - Contraseña: contraseña segura
+   - Email: `admin@example.com`
+
+3. Click **Instalar Gitea**
+4. Login con las credenciales creadas
 
 ## Configuración Inicial
 
