@@ -33,7 +33,9 @@ openssl rand -base64 32
 
 Guarda el resultado, lo necesitarás como valor de `DB_PASSWORD`.
 
-> ⚠️ **Importante**: Usa comillas simples en el archivo `.env` si la contraseña contiene caracteres especiales.
+> ⚠️ **Importante**: Usa comillas simples en el archivo `.env` s
+
+
 > Ejemplo: `DB_PASSWORD='tu_password_generado'`
 
 ---
