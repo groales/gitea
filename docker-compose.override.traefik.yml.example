@@ -1,39 +1,9 @@
-# docker-compose.override.traefik.yml.example
-#
-# Este archivo configura Gitea para usar Traefik como reverse proxy.
-#
-# Para usarlo:
-#   Desde Portainer (Git Repository):
-#     - Repository URL: https://git.ictiberia.com/groales/gitea
-#     - Compose path: docker-compose.yml
-#     - Additional paths: docker-compose.override.traefik.yml.example
-#     - Environment variables:
-#         DOMAIN_HOST=gitea.tudominio.com
-#         DB_PASSWORD=tu_password_db_seguro
-#
-#   Desde CLI:
-#     1. Copia este archivo a docker-compose.override.yml
-#     2. Crea archivo .env con las variables necesarias
-#
-# Docker Compose automáticamente fusiona docker-compose.yml + docker-compose.override.yml
-
 services:
   gitea:
-    labels:
-      # HTTP → HTTPS redirect
-      - "traefik.enable=true"
-      - "traefik.http.routers.gitea-http.rule=Host(`${DOMAIN_HOST}`)"
-      - "traefik.http.routers.gitea-http.entrypoints=web"
-      - "traefik.http.routers.gitea-http.middlewares=redirect-to-https@docker"
-      
-      # HTTPS router
-      - "traefik.http.routers.gitea.rule=Host(`${DOMAIN_HOST}`)"
-      - "traefik.http.routers.gitea.entrypoints=websecure"
-      - "traefik.http.routers.gitea.tls=true"
-      - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.gitea.service=gitea-svc"
-      - "traefik.http.services.gitea-svc.loadbalancer.server.port=3000"
-      
-      # Redirect middleware
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+    labels:      
+      - traefik.enable=true
+      - traefik.http.routers.gitea.rule=Host(`${DOMAIN_HOST}`)
+      - traefik.http.routers.gitea.entrypoints=websecure
+      - traefik.http.routers.gitea.tls.certresolver=letsencrypt
+      - traefik.http.routers.gitea.service=gitea-svc
+      - traefik.http.services.gitea-svc.loadbalancer.server.port=3000
