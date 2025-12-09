@@ -123,7 +123,6 @@ services:
       # HTTPS router
       - "traefik.http.routers.gitea.rule=Host(`${DOMAIN_HOST}`)"
       - "traefik.http.routers.gitea.entrypoints=websecure"
-      - "traefik.http.routers.gitea.tls=true"
       - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
       - "traefik.http.routers.gitea.service=gitea-svc"
       - "traefik.http.services.gitea-svc.loadbalancer.server.port=3000"
