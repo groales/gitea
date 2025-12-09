@@ -124,8 +124,7 @@ services:
       - "traefik.http.routers.gitea.rule=Host(`${DOMAIN_HOST}`)"
       - "traefik.http.routers.gitea.entrypoints=websecure"
       - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.gitea.service=gitea-svc"
-      - "traefik.http.services.gitea-svc.loadbalancer.server.port=3000"
+      - "traefik.http.services.gitea.loadbalancer.server.port=3000"
       
       # Redirect middleware
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
