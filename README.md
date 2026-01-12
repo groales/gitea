@@ -16,12 +16,24 @@ Servidor Git autoalojado ligero y rápido, escrito en Go. Alternativa a GitLab y
 ## Requisitos Previos
 
 - Docker Engine instalado
-- Portainer configurado (recomendado)
+- Docker Compose instalado
 - **Para Traefik o NPM**: Red Docker `proxy` creada
 - **Dominio configurado**: Para acceso HTTPS
 - **DB_PASSWORD generada**: Contraseña segura para PostgreSQL
 
 ⚠️ **IMPORTANTE**: Gitea requiere PostgreSQL. Este compose incluye un contenedor PostgreSQL 18 Alpine.
+
+## Archivos de este Repositorio
+
+Este repositorio contiene archivos de ejemplo:
+- `docker-compose.yml` - Configuración base de los contenedores
+- `.env.example` - Plantilla de variables de entorno
+- `docker-compose.override.traefik.yml.example` - Labels para Traefik
+- `README.md` - Esta documentación
+
+> 💡 **Tip**: Puedes copiar estos archivos manualmente o clonar el repositorio.
+
+---
 
 ## Generar DB_PASSWORD
 
@@ -40,54 +52,19 @@ Guarda el resultado, lo necesitarás como valor de `DB_PASSWORD`.
 
 ---
 
-## Despliegue con Portainer
+## Despliegue con Docker Compose
 
-### Opción A: Git Repository (Recomendada)
+### 1. Crear Directorio y Archivos
 
-Permite mantener la configuración actualizada automáticamente desde Git.
+```bash
+# Crear directorio
+mkdir gitea
+cd gitea
+```
 
-1. En Portainer, ve a **Stacks** → **Add stack**
-2. Nombra el stack: `gitea`
-3. Selecciona **Git Repository**
-4. Configura:
-   - **Repository URL**: `https://git.ictiberia.com/groales/gitea`
-   - **Repository reference**: `refs/heads/main`
-   - **Compose path**: `docker-compose.yml`
-   - **Additional paths**: Solo para Traefik: `docker-compose.override.traefik.yml.example`
+### 2. Crear docker-compose.yml
 
-5. En **Environment variables**, añade:
-
-   **Para Traefik**:
-   ```
-   DOMAIN_HOST=gitea.tudominio.com
-   DB_PASSWORD='tu_password_generado'
-   ```
-
-   **Para NPM**:
-   ```
-   DB_PASSWORD='tu_password_generado'
-   ```
-
-   ⚠️ **Nota para NPM**: No uses Additional paths, el docker-compose.yml base es suficiente.
-
-6. Haz clic en **Deploy the stack**
-
-#### Configuración de WebSocket
-
-- **Traefik**: Ya configurado en el override
-- **NPM**: Puede requerir activar **WebSocket Support** para push/pull en tiempo real
-
-### Opción B: Web Editor
-
-Copia y pega el contenido consolidado según tu configuración de proxy.
-
-1. En Portainer, ve a **Stacks** → **Add stack**
-2. Nombra el stack: `gitea`
-3. Selecciona **Web editor**
-4. Copia el contenido según tu entorno:
-
-<details>
-<summary>📋 Despliegue con Traefik</summary>
+Crea el archivo `docker-compose.yml`:
 
 ```yaml
 services:
@@ -113,6 +90,96 @@ services:
       - gitea-internal
     depends_on:
       - gitea-db
+
+  gitea-db:
+    container_name: gitea-db
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-gitea}
+      POSTGRES_USER: ${DB_USER:-gitea}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - gitea_db:/var/lib/postgresql/data
+    networks:
+      - gitea-internal
+
+volumes:
+  gitea_data:
+  gitea_db:
+
+networks:
+  proxy:
+    external: true
+  gitea-internal:
+    container_name: gitea
+    image: gitea/gitea:latest
+    restart: unless-stopped
+    environment:
+      USER_UID: 1000
+      USER_GID: 1000
+      GITEA__database__DB_TYPE: postgres
+      GITEA__database__HOST: gitea-db:5432
+      GITEA__database__NAME: ${DB_NAME:-gitea}
+      GITEA__database__USER: ${DB_USER:-gitea}
+      GITEA__database__PASSWD: ${DB_PASSWORD}
+      TZ: Europe/Madrid
+    volumes:
+      - gitea_data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - proxy
+      - gitea-internal
+    depends_on:
+      - gitea-db
+
+  gitea-db:
+    container_name: gitea-db
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-gitea}
+      POSTGRES_USER: ${DB_USER:-gitea}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - gitea_db:/var/lib/postgresql
+    networks:
+      - gitea-internal
+
+volumes:
+  gitea_data:
+    name: gitea_data
+  gitea_db:
+    name: gitea_db
+
+networks:
+  proxy:
+    external: true
+  gitea-internal:
+```
+
+### 3. Configurar Variables de Entorno
+
+Crea el archivo `.env`:
+
+```env
+# Dominio (solo para Traefik)
+DOMAIN_HOST=gitea.dominio.com
+
+# Base de Datos
+DB_NAME=gitea
+DB_USER=gitea
+DB_PASSWORD='tu_password_generado'
+```
+
+### 4. (Opcional) Configurar Traefik
+
+Si usas Traefik, crea `docker-compose.override.yml`:
+
+```yaml
+services:
+  gitea:
     labels:
       # HTTP → HTTPS redirect
       - "traefik.enable=true"
@@ -129,151 +196,44 @@ services:
       # Redirect middleware
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-
-  gitea-db:
-    container_name: gitea-db
-    image: postgres:18-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME:-gitea}
-      POSTGRES_USER: ${DB_USER:-gitea}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - gitea_db:/var/lib/postgresql
-    networks:
-      - gitea-internal
-
-volumes:
-  gitea_data:
-    name: gitea_data
-  gitea_db:
-    name: gitea_db
-
-networks:
-  proxy:
-    external: true
-  gitea-internal:
-    name: gitea-internal
 ```
 
-**Variables de entorno necesarias**:
-```
-DOMAIN_HOST=gitea.tudominio.com
-DB_PASSWORD='tu_password_generado'
-```
-
-</details>
-
-<details>
-<summary>📋 Despliegue con Nginx Proxy Manager</summary>
-
-```yaml
-services:
-  gitea:
-    container_name: gitea
-    image: gitea/gitea:latest
-    restart: unless-stopped
-    environment:
-      USER_UID: 1000
-      USER_GID: 1000
-      GITEA__database__DB_TYPE: postgres
-      GITEA__database__HOST: gitea-db:5432
-      GITEA__database__NAME: ${DB_NAME:-gitea}
-      GITEA__database__USER: ${DB_USER:-gitea}
-      GITEA__database__PASSWD: ${DB_PASSWORD}
-      TZ: Europe/Madrid
-    volumes:
-      - gitea_data:/data
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      - proxy
-      - gitea-internal
-    depends_on:
-      - gitea-db
-
-  gitea-db:
-    container_name: gitea-db
-    image: postgres:18-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME:-gitea}
-      POSTGRES_USER: ${DB_USER:-gitea}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - gitea_db:/var/lib/postgresql
-    networks:
-      - gitea-internal
-
-volumes:
-  gitea_data:
-    name: gitea_data
-  gitea_db:
-    name: gitea_db
-
-networks:
-  proxy:
-    external: true
-  gitea-internal:
-    name: gitea-internal
-```
-
-**Variables de entorno necesarias**:
-```
-DB_PASSWORD='tu_password_generado'
-```
-
-**⚠️ IMPORTANTE**: Debes configurar en NPM:
-1. Crea un Proxy Host apuntando a `gitea:3000`
-2. Configura SSL con Let's Encrypt
-3. Opcionalmente activa **WebSocket Support** para mejor rendimiento
-
-</details>
-
-5. En **Environment variables**, añade las variables correspondientes
-6. Haz clic en **Deploy the stack**
-
-## Despliegue con Docker CLI
-
-### 1. Clonar el repositorio
+### 5. Desplegar
 
 ```bash
+# Crear red proxy si no existe
+docker network create proxy
+
+# Iniciar servicios
+docker compose up -d
+
+# Ver logs
+docker compose logs -f gitea
+```
+
+---
+
+## Método Alternativo: Clonar desde Git
+
+Si prefieres usar Git para mantener la configuración actualizada:
+
+```bash
+# Clonar repositorio
 git clone https://git.ictiberia.com/groales/gitea.git
 cd gitea
-```
 
-### 2. Elegir modo de despliegue
+# Copiar y configurar variables
+cp .env.example .env
+nano .env
 
-#### Opción A: Traefik
-
-```bash
+# Traefik: Copiar override
 cp docker-compose.override.traefik.yml.example docker-compose.override.yml
-cp .env.example .env
-# Editar .env y configurar DOMAIN_HOST y DB_PASSWORD
-```
 
-#### Opción B: Nginx Proxy Manager
-
-No necesitas archivo override, usa el `docker-compose.yml` base directamente.
-
-Copiar y configurar `.env`:
-```bash
-cp .env.example .env
-# Editar .env y configurar DB_PASSWORD
-```
-
-### 3. Iniciar el servicio
-
-```bash
+# Desplegar
 docker compose up -d
 ```
 
-### 4. Verificar el despliegue
-
-```bash
-docker compose logs -f gitea
-docker compose logs -f gitea-db
-```
+---
 
 ## Configuración Inicial
 
