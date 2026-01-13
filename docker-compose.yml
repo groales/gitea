@@ -18,7 +18,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     networks:
       - proxy
-      - gitea-internal
+      - default
     depends_on:
       - gitea-db
 
@@ -32,8 +32,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - gitea_db:/var/lib/postgresql
-    networks:
-      - gitea-internal
 
 volumes:
   gitea_data:
@@ -42,7 +40,6 @@ volumes:
     name: gitea_db
 
 networks:
+  default:
   proxy:
     external: true
-  gitea-internal:
-    name: gitea-internal
