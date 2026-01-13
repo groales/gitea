@@ -87,50 +87,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     networks:
       - proxy
-      - gitea-internal
-    depends_on:
-      - gitea-db
-
-  gitea-db:
-    container_name: gitea-db
-    image: postgres:18-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME:-gitea}
-      POSTGRES_USER: ${DB_USER:-gitea}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - gitea_db:/var/lib/postgresql/data
-    networks:
-      - gitea-internal
-
-volumes:
-  gitea_data:
-  gitea_db:
-
-networks:
-  proxy:
-    external: true
-  gitea-internal:
-    container_name: gitea
-    image: gitea/gitea:latest
-    restart: unless-stopped
-    environment:
-      USER_UID: 1000
-      USER_GID: 1000
-      GITEA__database__DB_TYPE: postgres
-      GITEA__database__HOST: gitea-db:5432
-      GITEA__database__NAME: ${DB_NAME:-gitea}
-      GITEA__database__USER: ${DB_USER:-gitea}
-      GITEA__database__PASSWD: ${DB_PASSWORD}
-      TZ: Europe/Madrid
-    volumes:
-      - gitea_data:/data
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      - proxy
-      - gitea-internal
+      - default
     depends_on:
       - gitea-db
 
@@ -144,8 +101,6 @@ networks:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - gitea_db:/var/lib/postgresql
-    networks:
-      - gitea-internal
 
 volumes:
   gitea_data:
@@ -154,9 +109,9 @@ volumes:
     name: gitea_db
 
 networks:
+  default:
   proxy:
     external: true
-  gitea-internal:
 ```
 
 ### 3. Configurar Variables de Entorno
