@@ -26,7 +26,7 @@ Servidor Git autoalojado ligero y rápido, escrito en Go. Alternativa a GitLab y
 ## Archivos de este Repositorio
 
 Este repositorio contiene archivos de ejemplo:
-- `docker-compose.yml` - Configuración base de los contenedores
+- `compose.yaml` - Configuración base de los contenedores
 - `.env.example` - Plantilla de variables de entorno
 - `docker-compose.override.traefik.yml.example` - Labels para Traefik
 - `README.md` - Esta documentación
@@ -62,9 +62,9 @@ mkdir gitea
 cd gitea
 ```
 
-### 2. Crear docker-compose.yml
+### 2. Crear compose.yaml
 
-Crea el archivo `docker-compose.yml`:
+Crea el archivo `compose.yaml`:
 
 ```yaml
 services:
@@ -130,7 +130,7 @@ DB_PASSWORD='tu_password_generado'
 
 ### 4. (Opcional) Configurar Traefik
 
-Si usas Traefik, crea `docker-compose.override.yml`:
+Si usas Traefik, crea `compose.override.yaml`:
 
 ```yaml
 services:
@@ -182,7 +182,7 @@ cp .env.example .env
 nano .env
 
 # Traefik: Copiar override
-cp docker-compose.override.traefik.yml.example docker-compose.override.yml
+cp docker-compose.override.traefik.yml.example compose.override.yaml
 
 # Desplegar
 docker compose up -d
