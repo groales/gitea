@@ -329,7 +329,6 @@ Considera usar:
 
 ## Actualización
 
-### Desde Portainer (Git Repository)
 
 1. Ve a tu stack `gitea`
 2. Haz clic en **Pull and redeploy**
