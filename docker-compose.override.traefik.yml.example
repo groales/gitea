@@ -1,8 +1,0 @@
-services:
-  gitea:
-    labels:      
-      - traefik.enable=true
-      - traefik.http.routers.gitea.rule=Host(`${DOMAIN_HOST}`)
-      - traefik.http.routers.gitea.entrypoints=websecure
-      - traefik.http.routers.gitea.tls.certresolver=letsencrypt
-      - traefik.http.services.gitea.loadbalancer.server.port=3000

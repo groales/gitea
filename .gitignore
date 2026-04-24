@@ -2,7 +2,6 @@
 .env
 
 # Docker override file
-docker-compose.override.yml
 
 # Gitea data
 gitea/

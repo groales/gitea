@@ -17,7 +17,6 @@ Servidor Git autoalojado ligero y rápido, escrito en Go. Alternativa a GitLab y
 
 - Docker Engine instalado
 - Docker Compose instalado
-- **Para Traefik o NPM**: Red Docker `proxy` creada
 - **Dominio configurado**: Para acceso HTTPS
 - **DB_PASSWORD generada**: Contraseña segura para PostgreSQL
 
@@ -28,7 +27,6 @@ Servidor Git autoalojado ligero y rápido, escrito en Go. Alternativa a GitLab y
 Este repositorio contiene archivos de ejemplo:
 - `compose.yaml` - Configuración base de los contenedores
 - `.env.example` - Plantilla de variables de entorno
-- `docker-compose.override.traefik.yml.example` - Labels para Traefik
 - `README.md` - Esta documentación
 
 > 💡 **Tip**: Puedes copiar estos archivos manualmente o clonar el repositorio.
@@ -119,7 +117,6 @@ networks:
 Crea el archivo `.env`:
 
 ```env
-# Dominio (solo para Traefik)
 DOMAIN_HOST=gitea.dominio.com
 
 # Base de Datos
@@ -128,29 +125,17 @@ DB_USER=gitea
 DB_PASSWORD='tu_password_generado'
 ```
 
-### 4. (Opcional) Configurar Traefik
 
-Si usas Traefik, crea `compose.override.yaml`:
 
 ```yaml
 services:
   gitea:
     labels:
       # HTTP → HTTPS redirect
-      - "traefik.enable=true"
-      - "traefik.http.routers.gitea-http.rule=Host(`${DOMAIN_HOST}`)"
-      - "traefik.http.routers.gitea-http.entrypoints=web"
-      - "traefik.http.routers.gitea-http.middlewares=redirect-to-https@docker"
       
       # HTTPS router
-      - "traefik.http.routers.gitea.rule=Host(`${DOMAIN_HOST}`)"
-      - "traefik.http.routers.gitea.entrypoints=websecure"
-      - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
-      - "traefik.http.services.gitea.loadbalancer.server.port=3000"
       
       # Redirect middleware
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
 ```
 
 ### 5. Desplegar
@@ -181,8 +166,6 @@ cd gitea
 cp .env.example .env
 nano .env
 
-# Traefik: Copiar override
-cp docker-compose.override.traefik.yml.example compose.override.yaml
 
 # Desplegar
 docker compose up -d
@@ -398,7 +381,6 @@ docker compose exec gitea env | grep GITEA__database__PASSWD
 1. Verifica que la URL base en Gitea es correcta (`https://gitea.tudominio.com`)
 2. Comprueba que el certificado SSL es válido
 3. Asegúrate de usar credenciales correctas
-4. Para NPM: verifica que WebSocket Support está activado
 
 ### Problemas de rendimiento
 
