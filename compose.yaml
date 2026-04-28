@@ -21,6 +21,9 @@ services:
       - default
     depends_on:
       - gitea-db
+    #Puertos expuestos para acceso directo (opcional, se recomienda usar proxy inverso)  
+    #ports:
+    # - 3000:3000
 
   gitea-db:
     container_name: gitea-db
